@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
+    <AssemblyName>MicroServer</AssemblyName>
+    <RootNamespace>Microservices_MicroServer</RootNamespace>
+    <StartupObject>Microservices_MicroServer.Program</StartupObject>
+    <Configurations>Debug;Release;Debug_DEdition;Release_DEdition</Configurations>
+    <Authors>Mixail Alexeevich</Authors>
+    <Company>Mixail's simple projects</Company>
+    <RepositoryType>Public</RepositoryType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_DEdition|AnyCPU'">
+    <DefineConstants>TRACE;MicroServer_DebugEdition</DefineConstants>
+    <Optimize>false</Optimize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release_DEdition|AnyCPU'">
+    <DefineConstants>TRACE;MicroServer_DebugEdition</DefineConstants>
+    <Optimize>true</Optimize>
+  </PropertyGroup>
+
+</Project>
