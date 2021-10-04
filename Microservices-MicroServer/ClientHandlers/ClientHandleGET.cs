@@ -30,21 +30,21 @@ namespace Microservices_MicroServer {
 #if MicroServer_DebugEdition
                         var ptoken = ContentStorage.debug_AddPending(type, id);
 #endif
-                        Program.threadManagerGET.RegisterPending(request.RequestTraceIdentifier);
+                        ThreadManagerGET.RegisterPending(request.RequestTraceIdentifier);
                         do {
                             Thread.Yield(); //Ask OS for executing another thread (not this)
                             Thread.Sleep(0);
 
-                            Program.threadManagerGET.WaitForEvent();
+                            ThreadManagerGET.WaitForEvent();
                             if ((DateTime.UtcNow - start_time).TotalSeconds < 25) {
                                 content = ContentStorage.PopContent(type, id);
                             } else {
                                 content = new BasicContent("MicroServer.25367be645.GET_TIMEOUT_25"); //Needed for timeout processing
                             }
 
-                            Program.threadManagerGET.RequiredExecuted(request.RequestTraceIdentifier);
+                            ThreadManagerGET.RequiredExecuted(request.RequestTraceIdentifier);
                         } while (content == null);
-                        Program.threadManagerGET.UnregisterPending(request.RequestTraceIdentifier);
+                        ThreadManagerGET.UnregisterPending(request.RequestTraceIdentifier);
 #if MicroServer_DebugEdition
                         ContentStorage.debug_RemovePending(ptoken);
 #endif

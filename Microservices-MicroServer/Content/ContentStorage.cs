@@ -6,30 +6,48 @@ using System.Threading;
 
 namespace Microservices_MicroServer {
     static class ContentStorage {
+
         static Dictionary<string, Queue<BasicContent>> storage = new();
+        static ReaderWriterLockSlim lockStorage = new(); //Syncronization object (for saving storage integrity)
+
         static HashSet<string> external_storaged = new();
-        static Mutex mtx = new(); //Syncronization object (for saving storage integrity)
+        static ReaderWriterLockSlim lockExternals = new(); //Syncronization object (for saving external_storaged integrity)
 
         public static void PushContent(BasicContent content) {
-            mtx.WaitOne();
+            Queue<BasicContent> que = null;
 
-            if (storage.TryGetValue(content.type, out Queue<BasicContent> que)) {
+            lockStorage.EnterUpgradeableReadLock();
+            if (storage.TryGetValue(content.type, out que)) {
+                lockStorage.EnterWriteLock();
                 que.Enqueue(content);
-                
-                if (que.Count > 128 && !external_storaged.Contains(content.type)) {
-                    external_storaged.Add(content.type);
-                }
+                lockStorage.ExitWriteLock();
             } else {
+                lockStorage.EnterWriteLock();
                 storage.Add(content.type, new Queue<BasicContent>(
                     new BasicContent[] { content }
                     ));
+                lockStorage.ExitWriteLock();
+            }
+            lockStorage.ExitUpgradeableReadLock();
+
+            if (que != null) {
+                lockExternals.EnterUpgradeableReadLock();
+                if (que.Count > 128 && !external_storaged.Contains(content.type)) {
+
+                    lockExternals.EnterWriteLock();
+                    external_storaged.Add(content.type);
+                    lockExternals.ExitWriteLock();
+
+                }
+                lockExternals.ExitUpgradeableReadLock();
             }
 
 #if MicroServer_DebugEdition
+            debug_lockPost.WaitOne();
             if (debug_posthistory.Count > 512) debug_posthistory.RemoveRange(0, 128);
             debug_posthistory.Add(new PostHistory(DateTime.Now, content));
+            debug_lockPost.ReleaseMutex();
 #endif
-            mtx.ReleaseMutex();
         }
 
         /// <summary>
@@ -57,48 +75,75 @@ namespace Microservices_MicroServer {
         public static BasicContent PopContent(string type, string id) {
             BasicContent result = null;
 
-            mtx.WaitOne();
-
             if (type == "null") {
+                lockStorage.EnterReadLock(); //Start 1
                 result = storage.SelectMany(t => t.Value.Where(c => c.visibleId && c.id == id)).FirstOrDefault(); //Gets element from storage with given id (if such exists)
-                if (result != null) {
-                    Queue<BasicContent> que = storage[result.type] = RemoveFirstOccurence(storage[result.type], result);
 
-                    if (que.Count == 0)
-                        storage.Remove(result.type);
-
-#if MicroServer_DebugEdition
-                    if (debug_gethistory.Count > 512) debug_gethistory.RemoveRange(0, 128);
-                    debug_gethistory.Add(new GetHistory(DateTime.Now, result, "null", id));
-#endif
-                }
-            } else if (storage.TryGetValue(type, out Queue<BasicContent> que)) {
-                if (id == "null") {
-                    result = que.Dequeue();
-                    
-                    if (que.Count == 0)
-                        storage.Remove(type);
-#if MicroServer_DebugEdition
-                    if (debug_gethistory.Count > 512) debug_gethistory.RemoveRange(0, 128);
-                    debug_gethistory.Add(new GetHistory(DateTime.Now, result, type, id));
-#endif
+                if (result == null) {
+                    lockStorage.ExitReadLock(); //End 1
                 } else {
-                    result = que.Where(c => (id == "null" || c.visibleId && c.id == id)).FirstOrDefault();
+                    Queue<BasicContent> que_new = RemoveFirstOccurence(storage[result.type], result);
+                    lockStorage.ExitReadLock(); //End 1
+                    //Totally UNLOCKED zone! Anything can happen!
+                    lockStorage.EnterWriteLock(); //Start 2
+                    try {
+                        storage[result.type] = que_new;
 
-                    if (result != null) {
-                        Queue<BasicContent> quet = storage[type] = RemoveFirstOccurence(que, result);
-
-                        if (quet.Count == 0)
-                            storage.Remove(type);
-#if MicroServer_DebugEdition
-                    if (debug_gethistory.Count > 512) debug_gethistory.RemoveRange(0, 128);
-                    debug_gethistory.Add(new GetHistory(DateTime.Now, result, type, id));
-#endif
+                        if (que_new.Count == 0)
+                            storage.Remove(result.type);
+                    } catch {
+                        result = null;
+                    } finally {
+                        lockStorage.ExitWriteLock(); //End 2
                     }
                 }
+            } else if (id == "null") {
+                lockStorage.EnterUpgradeableReadLock();
+                if (storage.TryGetValue(type, out Queue<BasicContent> que)) {
+                    lockStorage.EnterWriteLock();
+
+                    result = que.Dequeue();
+                    if (que.Count == 0)
+                        storage.Remove(type);
+
+                    lockStorage.ExitWriteLock();
+                }
+                lockStorage.ExitUpgradeableReadLock();
+            } else {
+                lockStorage.EnterReadLock(); //Start 3
+                if (storage.TryGetValue(type, out Queue<BasicContent> que)) {
+                    result = que.Where(c => (id == "null" || c.visibleId && c.id == id)).FirstOrDefault();
+
+                    if (result == null) {
+                        lockStorage.ExitReadLock(); //End 3
+                    } else {
+                        Queue<BasicContent> que_new = RemoveFirstOccurence(que, result);
+                        lockStorage.ExitReadLock(); //End 3
+                        //Totally UNLOCKED zone! Anything can happen!
+                        lockStorage.EnterWriteLock(); //Start 4
+                        try {
+                            storage[type] = que_new;
+
+                            if (que_new.Count == 0)
+                                storage.Remove(type);
+                        } catch {
+                            result = null;
+                        } finally {
+                            lockStorage.ExitWriteLock(); //End 4
+                        }
+                    }
+                } else
+                    lockStorage.ExitReadLock(); //End 3
             }
 
-            mtx.ReleaseMutex();
+#if MicroServer_DebugEdition
+            if (result != null) {
+                debug_lockGet.WaitOne();
+                if (debug_gethistory.Count > 512) debug_gethistory.RemoveRange(0, 128);
+                debug_gethistory.Add(new GetHistory(DateTime.Now, result, type, id));
+                debug_lockGet.ReleaseMutex();
+            }
+#endif
             return result;
         }
 
@@ -111,8 +156,7 @@ namespace Microservices_MicroServer {
         }
         internal static IEnumerable<ExternalStatus> GetExternalStatus() {
             List<ExternalStatus> stat = new();
-
-            mtx.WaitOne();
+            lockStorage.EnterReadLock();
 
             foreach (var item in external_storaged) {
                 if (storage.TryGetValue(item, out Queue<BasicContent> que)) {
@@ -122,45 +166,64 @@ namespace Microservices_MicroServer {
                 }
             }
 
-            mtx.ReleaseMutex();
+            lockStorage.ExitReadLock();
             return stat;
         }
 
         internal static IEnumerable<BasicContent> FetchOverflow(string type) {
             IEnumerable<BasicContent> elms = null;
-
-            mtx.WaitOne();
+            lockStorage.EnterUpgradeableReadLock();
 
             if (storage.TryGetValue(type, out Queue<BasicContent> que) && que.Count > 128) {
                 int scnt = que.Count - 96;
                 elms = que.Take(scnt);
-                storage[type] = new Queue<BasicContent>(que.Skip(scnt));
+                var que_new = new Queue<BasicContent>(que.Skip(scnt));
+
+                lockStorage.EnterWriteLock();
+                storage[type] = que_new;
+                lockStorage.ExitWriteLock();
             }
-            mtx.ReleaseMutex();
+
+            lockStorage.ExitUpgradeableReadLock();
             return elms;
         }
 
         internal static bool СompensateUnderflow(IEnumerable<BasicContent> content) {
             string type = content.First().type;
-            if (!external_storaged.Contains(type) || content.Any(x => x.type != type || x.type == "null" && !x.visibleId))
+
+            lockExternals.EnterReadLock();
+            if (external_storaged.Contains(type)) {
+                lockExternals.ExitReadLock();
+            } else { 
+                lockExternals.ExitReadLock();
+                return false;
+            }
+                
+            if (content.Any(x => x.type != type || x.type == "null" && !x.visibleId))
                 return false;
 
-            mtx.WaitOne();
+            lockStorage.EnterUpgradeableReadLock(); //Start 1
 
             if (storage.TryGetValue(type, out Queue<BasicContent> que)) {
                 if (que.Count < 64 && content.Count() + que.Count < 128) {
+
+                    lockStorage.EnterWriteLock();
                     foreach (var item in content) {
                         que.Enqueue(item);
                     }
+                    lockStorage.ExitWriteLock();
+
                 } else {
-                    mtx.ReleaseMutex();
+                    lockStorage.ExitUpgradeableReadLock(); //Exit 1
                     return false;
                 }
             } else {
+                lockStorage.EnterWriteLock();
                 storage.Add(type, new Queue<BasicContent>(content));
+                lockStorage.ExitWriteLock();
             }
 
-            mtx.ReleaseMutex();
+            lockStorage.ExitUpgradeableReadLock(); //Exit 1
             return true;
         }
 
@@ -187,45 +250,50 @@ namespace Microservices_MicroServer {
 
         static List<PostHistory> debug_posthistory = new();
         static List<GetHistory> debug_gethistory = new();
+        static Mutex debug_lockGet = new(); 
+        static Mutex debug_lockPost = new(); 
 
         internal static IEnumerable<GetHistory> debug_RetriveGetHistory() {
-            mtx.WaitOne();
+            debug_lockGet.WaitOne();
             var result = new List<GetHistory>(debug_gethistory);
             debug_gethistory.Clear();
-            mtx.ReleaseMutex();
+            debug_lockGet.ReleaseMutex();
             return result;
         }
         internal static IEnumerable<PostHistory> debug_RetrivePostHistory() {
-            mtx.WaitOne();
+            debug_lockPost.WaitOne();
             var result = new List<PostHistory>(debug_posthistory);
             debug_posthistory.Clear();
-            mtx.ReleaseMutex();
+            debug_lockPost.ReleaseMutex();
             return result;
         }
 
         internal static IEnumerable<BasicContent> debug_InternalStorageSnapshot() {
-            mtx.WaitOne();
+            lockStorage.EnterReadLock();
             var result = storage.SelectMany(i => i.Value);
-            mtx.ReleaseMutex();
+            lockStorage.ExitReadLock();
             return result;
         }
 
         internal static IEnumerable<string> debug_GetLocallyStoredTypes() {
-            mtx.WaitOne();
+            lockStorage.EnterReadLock();
             var result = storage.Keys;
-            mtx.ReleaseMutex();
+            lockStorage.ExitReadLock();
             return result;
         }
 
         internal static IEnumerable<KeyValuePair<string, uint>> debug_GetTypeStatistic() {
-            mtx.WaitOne();
+            lockStorage.EnterReadLock();
             var resultemp = storage.Select(i => new KeyValuePair<string, uint>(i.Key, (uint)i.Value.Count));
+            lockStorage.ExitReadLock();
+
+            lockExternals.EnterReadLock();
             var result = resultemp.Concat(external_storaged.Where(i => resultemp.All(p => p.Key != i)).Select(i => new KeyValuePair<string, uint>(i, 0)));
-            mtx.ReleaseMutex();
+            lockExternals.ExitReadLock();
             return result;
         }
 
-        static Mutex debug_pendings_mxt = new();
+        static ReaderWriterLockSlim debug_lock_pendings = new();
         internal struct Pending {
             public string type, id;
             public Pending(string type, string id) {
@@ -234,23 +302,23 @@ namespace Microservices_MicroServer {
         }
         static List<Pending> debug_pendings = new();
         internal static Pending debug_AddPending(string type, string id) {
-            debug_pendings_mxt.WaitOne();
+            debug_lock_pendings.EnterWriteLock();
             Pending pnd = new(type, id);
             debug_pendings.Add(pnd);
-            debug_pendings_mxt.ReleaseMutex();
+            debug_lock_pendings.ExitWriteLock();
             return pnd;
         }
 
         internal static void debug_RemovePending(Pending pending) {
-            debug_pendings_mxt.WaitOne();
+            debug_lock_pendings.EnterWriteLock();
             debug_pendings.Remove(pending);
-            debug_pendings_mxt.ReleaseMutex();
+            debug_lock_pendings.ExitWriteLock();
         }
 
         internal static IEnumerable<Pending> debug_GetPendings() {
-            debug_pendings_mxt.WaitOne();
+            debug_lock_pendings.EnterReadLock();
             var result = new List<Pending>(debug_pendings);
-            debug_pendings_mxt.ReleaseMutex();
+            debug_lock_pendings.ExitReadLock();
             return result;
         }
 #endif

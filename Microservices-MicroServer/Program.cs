@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 
 namespace Microservices_MicroServer {
     class Program {
-        public static Utils.ThreadManagerGET threadManagerGET = new();
 
         static void Main(string[] args) {
             if (!HttpListener.IsSupported) {

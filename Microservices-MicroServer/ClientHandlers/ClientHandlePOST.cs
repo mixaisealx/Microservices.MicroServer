@@ -26,14 +26,14 @@ namespace Microservices_MicroServer {
                     if (bcontent.type != "null" || bcontent.visibleId) {
                         if (!Constants.SPECIAL_TYPES.Any(x => x == bcontent.type)) {
                             ContentStorage.PushContent(bcontent);
-                            Program.threadManagerGET.SetEvent();
+                            ThreadManagerGET.SetEvent();
                             resp.StatusCode = 201;
                         } else if (bcontent.type == "MicroServer.25367be645.CompensateUnderflow") {
                             try {
                                 BasicContent[] compensation = JsonSerializer.Deserialize<BasicContent[]>(((JsonElement)bcontent.content).GetRawText(), Constants.JSON_SERIZLIZER_OPTIONS);
                                 if (compensation.Length != 0 && Constants.SPECIAL_TYPES.All(x => x != compensation[0].type)) {
                                     resp.StatusCode = ContentStorage.СompensateUnderflow(compensation.Select(x => Utils.FixNullInBasicContent(x))) ? 200 : 409;
-                                    Program.threadManagerGET.SetEvent();
+                                    ThreadManagerGET.SetEvent();
                                 } else {
                                     resp.StatusCode = 400;
                                 }

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microservices-MicroServer",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MicroServer.Debugger", "MicroServer.Debugger\MicroServer.Debugger.csproj", "{8F051B80-125F-4FEF-8DA9-9654856E045E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIdev", "APIdev\APIdev.csproj", "{19171E66-7071-4166-9F13-862F1BB2DCB1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "APIdev", "API-C#\APIdev.csproj", "{19171E66-7071-4166-9F13-862F1BB2DCB1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
