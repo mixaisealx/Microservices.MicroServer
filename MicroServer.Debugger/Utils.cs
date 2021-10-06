@@ -100,13 +100,13 @@ namespace MicroServer.Debugger {
                         Console.WriteLine("The server behaves incorrectly for POST requests. " +
                             "You probably confused the GET and POST addresses, or you made a mistake in some part of the address after specifying the host and port. " +
                             "\nPerhaps you are using an non-original server. " +
-                            "Tip: When developing your server, rely on the specification, not the test from this program. ");
+                            "Tip: When developing your server, rely on the MicroServer's documentation, not the test from this program. ");
                         break;
                     case ServerValidationResult.UnexpectedGETBehaviour:
                         Console.WriteLine("The server behaves incorrectly for GET requests. " +
                             "You probably confused the GET and POST addresses, or you made a mistake in some part of the address after specifying the host and port. " +
                             "\nPerhaps you are using an non-original server. " +
-                            "Tip: When developing your server, rely on the specification, not the test from this program. ");
+                            "Tip: When developing your server, rely on the MicroServer's documentation, not the test from this program. ");
                         break;
                     case ServerValidationResult.UnknownCommunicationFormat:
                         Console.WriteLine("You are definitely developing your own microservice server. " +
