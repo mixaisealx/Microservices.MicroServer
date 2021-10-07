@@ -109,11 +109,11 @@ namespace MicroServer.Debugger {
                             "Tip: When developing your server, rely on the MicroServer's documentation, not the test from this program. ");
                         break;
                     case ServerValidationResult.UnknownCommunicationFormat:
-                        Console.WriteLine("You are definitely developing your own microservice server. " +
+                        Console.WriteLine("You are definitely developing your own microservices server. " +
                             "Note that communication between the client and the server on jobs occurs strictly within the framework of the \"BasicContent\" data structure (see the code of the original server).");
                         break;
                     case ServerValidationResult.InvalidDataReceived:
-                        Console.WriteLine("You are definitely developing your own microservice server. " +
+                        Console.WriteLine("You are definitely developing your own microservices server. " +
                             "There seems to be a bug in your implementation of the task store (the received data does not match the sent one). " +
                             "It might have something to do with multithreading (are you missed some mutex?).");
                         break;
