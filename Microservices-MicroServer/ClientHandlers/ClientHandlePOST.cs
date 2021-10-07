@@ -19,7 +19,7 @@ namespace Microservices_MicroServer {
                 }
 
                 try {
-                    BasicContent bcontent = JsonSerializer.Deserialize<BasicContent>(content, Constants.JSON_SERIZLIZER_OPTIONS);
+                    BasicContent bcontent = JsonSerializer.Deserialize<BasicContent>(content, Constants.JSON_SERIALIZER_OPTIONS);
 
                     Utils.FixNullInBasicContent(ref bcontent);
 
@@ -30,7 +30,7 @@ namespace Microservices_MicroServer {
                             resp.StatusCode = 201;
                         } else if (bcontent.type == "MicroServer.25367be645.CompensateUnderflow") {
                             try {
-                                BasicContent[] compensation = JsonSerializer.Deserialize<BasicContent[]>(((JsonElement)bcontent.content).GetRawText(), Constants.JSON_SERIZLIZER_OPTIONS);
+                                BasicContent[] compensation = JsonSerializer.Deserialize<BasicContent[]>(((JsonElement)bcontent.content).GetRawText(), Constants.JSON_SERIALIZER_OPTIONS);
                                 if (compensation.Length != 0 && Constants.SPECIAL_TYPES.All(x => x != compensation[0].type)) {
                                     resp.StatusCode = ContentStorage.СompensateUnderflow(compensation.Select(x => Utils.FixNullInBasicContent(x))) ? 200 : 409;
                                     ThreadManagerGET.SetEvent();

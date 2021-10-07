@@ -16,7 +16,7 @@ namespace Microservices_MicroServer {
         "MicroServer.25367be645.DebugEdition.getPendings",
         "MicroServer.25367be645.GET_TIMEOUT_25"};
 
-        public static readonly JsonSerializerOptions JSON_SERIZLIZER_OPTIONS = new(JsonSerializerDefaults.Web) {
+        public static readonly JsonSerializerOptions JSON_SERIALIZER_OPTIONS = new(JsonSerializerDefaults.Web) {
             IncludeFields = true
         };
     }

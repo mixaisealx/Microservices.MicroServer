@@ -162,7 +162,7 @@ namespace MicroServerAPI {
             IncludeFields = true
         };
         
-        public class BasicContent {
+        private class BasicContent {
             public BasicContent(string type, string id, bool visibleId, object content) {
                 this.type = type;
                 this.id = id;
