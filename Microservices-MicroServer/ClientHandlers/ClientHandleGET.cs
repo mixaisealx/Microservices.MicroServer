@@ -51,7 +51,7 @@ namespace Microservices_MicroServer {
                     }
 
                     if (content.type != "MicroServer.25367be645.GET_TIMEOUT_25") {
-                        byte[] buffer = JsonSerializer.SerializeToUtf8Bytes(content, Constants.JSON_SERIZLIZER_OPTIONS);
+                        byte[] buffer = JsonSerializer.SerializeToUtf8Bytes(content, Constants.JSON_SERIALIZER_OPTIONS);
                         response.ContentLength64 = buffer.Length;
 
                         Stream output = response.OutputStream;
@@ -74,14 +74,14 @@ namespace Microservices_MicroServer {
                     byte[] buffer = null;
                     switch (type) {
                         case "MicroServer.25367be645.ExternalStatus": {
-                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.GetExternalStatus(), Constants.JSON_SERIZLIZER_OPTIONS);
+                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.GetExternalStatus(), Constants.JSON_SERIALIZER_OPTIONS);
                             response.StatusCode = 200;
                         }
                         break;
                         case "MicroServer.25367be645.FetchOverflow": {
                             IEnumerable<BasicContent> arrOvf = ContentStorage.FetchOverflow(id); //ID like a type
                             if (arrOvf != null) {
-                                buffer = JsonSerializer.SerializeToUtf8Bytes(arrOvf, Constants.JSON_SERIZLIZER_OPTIONS);
+                                buffer = JsonSerializer.SerializeToUtf8Bytes(arrOvf, Constants.JSON_SERIALIZER_OPTIONS);
                                 response.StatusCode = 200;
                             } else {
                                 response.StatusCode = 404;
@@ -90,27 +90,27 @@ namespace Microservices_MicroServer {
                         break;
 #if MicroServer_DebugEdition
                         case "MicroServer.25367be645.DebugEdition.getInternalStorageSnapshot":
-                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_InternalStorageSnapshot(), Constants.JSON_SERIZLIZER_OPTIONS);
+                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_InternalStorageSnapshot(), Constants.JSON_SERIALIZER_OPTIONS);
                             response.StatusCode = 200;
                             break;
                         case "MicroServer.25367be645.DebugEdition.getLocallyAvailibleTypes":
-                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_GetLocallyStoredTypes(), Constants.JSON_SERIZLIZER_OPTIONS);
+                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_GetLocallyStoredTypes(), Constants.JSON_SERIALIZER_OPTIONS);
                             response.StatusCode = 200;
                             break;
                         case "MicroServer.25367be645.DebugEdition.getTypesStatistic":
-                            buffer = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, uint>(ContentStorage.debug_GetTypeStatistic()), Constants.JSON_SERIZLIZER_OPTIONS);
+                            buffer = JsonSerializer.SerializeToUtf8Bytes(new Dictionary<string, uint>(ContentStorage.debug_GetTypeStatistic()), Constants.JSON_SERIALIZER_OPTIONS);
                             response.StatusCode = 200;
                             break;
                         case "MicroServer.25367be645.DebugEdition.retrivePostHistory":
-                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_RetrivePostHistory(), Constants.JSON_SERIZLIZER_OPTIONS);
+                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_RetrivePostHistory(), Constants.JSON_SERIALIZER_OPTIONS);
                             response.StatusCode = 200;
                             break;
                         case "MicroServer.25367be645.DebugEdition.retriveGetHistory":
-                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_RetriveGetHistory(), Constants.JSON_SERIZLIZER_OPTIONS);
+                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_RetriveGetHistory(), Constants.JSON_SERIALIZER_OPTIONS);
                             response.StatusCode = 200;
                             break;
                         case "MicroServer.25367be645.DebugEdition.getPendings":
-                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_GetPendings(), Constants.JSON_SERIZLIZER_OPTIONS);
+                            buffer = JsonSerializer.SerializeToUtf8Bytes(ContentStorage.debug_GetPendings(), Constants.JSON_SERIALIZER_OPTIONS);
 
                             response.StatusCode = 200;
                             break;
