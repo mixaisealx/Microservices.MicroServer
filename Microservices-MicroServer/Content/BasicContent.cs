@@ -1,4 +1,5 @@
 ﻿
+
 namespace Microservices_MicroServer {
     public class BasicContent {
         public BasicContent(string type) {

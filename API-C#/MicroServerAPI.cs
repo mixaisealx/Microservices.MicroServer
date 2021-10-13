@@ -9,15 +9,16 @@ using System.Web;
 using System.Reflection;
 using System.Net.Http.Headers;
 
+
 namespace MicroServerAPI {
 
-    public class MicroService {
-        string url_get, url_post;
-        bool persistentMode;
-       
-        readonly MediaTypeWithQualityHeaderValue CONTENT_TYPE = new MediaTypeWithQualityHeaderValue("application/json");
+    public class MicroService : IDisposable {
+        private string url_get, url_post;
+        protected bool persistentMode;
 
-        HttpClient client = new() {
+        private readonly MediaTypeWithQualityHeaderValue CONTENT_TYPE = new MediaTypeWithQualityHeaderValue("application/json");
+
+        private HttpClient client = new() {
             Timeout = TimeSpan.FromSeconds(60)
         };
 
@@ -157,6 +158,21 @@ namespace MicroServerAPI {
             PostJob<I>(requested_function, cid, false, content);
             return GetJob<O>(target_content_type, cid);
         }
+
+        protected virtual void DisposeClass() {
+            if (client != null) {
+                client.Dispose();
+                client = null;
+            }
+        }
+
+
+        public void Dispose() {
+            DisposeClass();
+            GC.SuppressFinalize(this);
+        }
+
+        ~MicroService() { }
 
         private static readonly JsonSerializerOptions JSON_SERIZLIZER_OPTIONS = new(JsonSerializerDefaults.Web) {
             IncludeFields = true

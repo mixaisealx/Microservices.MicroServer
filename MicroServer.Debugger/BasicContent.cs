@@ -1,4 +1,5 @@
 ﻿
+
 namespace MicroServer.Debugger {
     public class BasicContent {
         public string id { get; set; }
