@@ -101,14 +101,14 @@ class MicroService:
         if response.status_code < 200 or response.status_code >= 300:
             raise Exception("The received status code does not meet the conditions for normal operation!")
 
-    def PostFinalResult(self, content, responseAddress:ResponseAddress, job_type:str = 'null'):
-        self.PostJob(content=content, job_type=job_type, job_id=responseAddress.id, visibleId=True)
+    def PostFinalResult(self, content, responseAddress:ResponseAddress, result_type:str = 'null'):
+        self.PostJob(content=content, job_type=result_type, job_id=responseAddress.id, visibleId=True)
         
-    def PostIntermediateResult(self, content, responseAddress:ResponseAddress, job_type:str):
-        if job_type == 'null':
-            raise Exception("'job_type' can not be 'null' in intermediate result!")
+    def PostIntermediateResult(self, content, responseAddress:ResponseAddress, result_type:str):
+        if result_type == 'null':
+            raise Exception("'result_type' can not be 'null' in intermediate result!")
         
-        self.PostJob(content=content, job_type=job_type, job_id=responseAddress.id, visibleId=responseAddress.visibleId)
+        self.PostJob(content=content, job_type=result_type, job_id=responseAddress.id, visibleId=responseAddress.visibleId)
 
     def ProcessAsFunction(self, content, requested_function:str, target_content_type:str='null'):
         if requested_function == 'null':

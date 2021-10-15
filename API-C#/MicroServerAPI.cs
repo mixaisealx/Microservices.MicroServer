@@ -97,14 +97,14 @@ namespace MicroServerAPI {
             return content;
         }
 
-        public void PostFinalResult<T>(string job_type, ResponseAddress targetAddress, T content) {
-            PostJob<T>(job_type, targetAddress.id, true, content);
+        public void PostFinalResult<T>(string result_type, ResponseAddress targetAddress, T content) {
+            PostJob<T>(result_type, targetAddress.id, true, content);
         }
 
-        public void PostIntermediateResult<T>(string job_type, ResponseAddress targetAddress, T content) {
-            if (job_type == null) throw new ArgumentNullException(nameof(job_type));
+        public void PostIntermediateResult<T>(string result_type, ResponseAddress targetAddress, T content) {
+            if (result_type == null) throw new ArgumentNullException(nameof(result_type));
 
-            PostJob<T>(job_type, targetAddress.id, targetAddress.visibleId, content);
+            PostJob<T>(result_type, targetAddress.id, targetAddress.visibleId, content);
         }
 
         public void PostJob<T>(string job_type, T content) {
