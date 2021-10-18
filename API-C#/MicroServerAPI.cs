@@ -166,7 +166,6 @@ namespace MicroServerAPI {
             }
         }
 
-
         public void Dispose() {
             DisposeClass();
             GC.SuppressFinalize(this);
