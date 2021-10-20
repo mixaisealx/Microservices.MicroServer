@@ -2,6 +2,7 @@ import requests
 import json
 import urllib
 import datetime
+import __main__
 
 class ResponseAddress:
     """Response address for posting result"""
@@ -114,7 +115,7 @@ class MicroService:
         if requested_function == 'null':
             raise Exception("'requested_function' can not be 'null'!")
 
-        cid = __file__ + '.' + str(datetime.datetime.utcnow()) 
+        cid = __main__.__file__ + '.' + str(datetime.datetime.utcnow()) 
         
         self.PostJob(content=content, job_type=requested_function, job_id=cid, visibleId=False)
         return self.GetJob(job_type=target_content_type, job_id=cid)[0]
