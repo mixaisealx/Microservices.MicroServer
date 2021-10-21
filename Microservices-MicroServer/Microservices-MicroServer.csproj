@@ -10,6 +10,7 @@
     <Authors>Mixail Alexeevich</Authors>
     <Company>Mixail's simple projects</Company>
     <RepositoryType>Public</RepositoryType>
+    <ApplicationIcon>serverIcon_normal.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug_DEdition|AnyCPU'">
